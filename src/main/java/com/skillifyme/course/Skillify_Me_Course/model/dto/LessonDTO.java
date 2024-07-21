@@ -1,0 +1,14 @@
+package com.skillifyme.course.Skillify_Me_Course.model.dto;
+
+import lombok.Data;
+import java.util.List;
+
+@Data
+public class LessonDTO {
+    private String title;
+    private String content;
+    private String videoUrl;
+    private String videoTitle;
+    private String videoDescription;
+    private List<QuizDTO> quizzes;
+}
