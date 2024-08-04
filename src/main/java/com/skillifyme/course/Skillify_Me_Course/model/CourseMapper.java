@@ -15,9 +15,10 @@ public class CourseMapper {
     public CourseDTO toDto(Course course) {
         CourseDTO courseDTO = new CourseDTO();
         courseDTO.setId(course.getId());
+        courseDTO.setPrice(course.getPrice());
         courseDTO.setTitle(course.getTitle());
         courseDTO.setDescription(course.getDescription());
-        courseDTO.setCreatedBy(course.getCreatedBy());
+        courseDTO.setInstructorEmail(course.getInstructorEmail());
         courseDTO.setModules(course.getModules().stream().map(this::toDto).collect(Collectors.toList()));
         return courseDTO;
     }
@@ -25,9 +26,10 @@ public class CourseMapper {
     public Course toEntity(CourseDTO courseDTO) {
         Course course = new Course();
         course.setId(courseDTO.getId());
+        course.setPrice(courseDTO.getPrice());
         course.setTitle(courseDTO.getTitle());
         course.setDescription(courseDTO.getDescription());
-        course.setCreatedBy(courseDTO.getCreatedBy());
+        course.setInstructorEmail(courseDTO.getInstructorEmail());
         course.setModules(courseDTO.getModules().stream().map(this::toEntity).collect(Collectors.toList()));
         return course;
     }

@@ -8,8 +8,9 @@ import java.util.List;
 @Data
 public class CourseDTO {
     private ObjectId id;
+    private String price;
     private String title;
     private String description;
     private List<ModuleDTO> modules;
-    private String createdBy;
+    private String instructorEmail;
 }
