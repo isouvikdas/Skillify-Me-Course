@@ -11,6 +11,7 @@ public class CourseDTO {
     private String price;
     private String title;
     private String description;
-    private List<ModuleDTO> modules;
+    private List<ObjectId> moduleIds;
+    private List<ModuleDTO> moduleDTOS;
     private String instructorEmail;
 }

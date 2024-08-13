@@ -17,6 +17,7 @@ public class Course {
     private String price;
     private String title;
     private String description;
+    private List<ObjectId> moduleIds;
     private List<Module> modules;
     private String instructorEmail;
     private LocalDateTime createdDate;

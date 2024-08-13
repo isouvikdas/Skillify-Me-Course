@@ -3,11 +3,15 @@ package com.skillifyme.course.Skillify_Me_Course.service;
 import com.skillifyme.course.Skillify_Me_Course.exception.ResourceNotFoundException;
 import com.skillifyme.course.Skillify_Me_Course.exception.UnauthorizedException;
 import com.skillifyme.course.Skillify_Me_Course.model.CourseMapper;
+import com.skillifyme.course.Skillify_Me_Course.model.ModuleMapper;
 import com.skillifyme.course.Skillify_Me_Course.model.dto.CourseDTO;
+import com.skillifyme.course.Skillify_Me_Course.model.dto.ModuleDTO;
 import com.skillifyme.course.Skillify_Me_Course.model.dto.ValidateTokenResponse;
 import com.skillifyme.course.Skillify_Me_Course.model.entity.Course;
+import com.skillifyme.course.Skillify_Me_Course.model.entity.Module;
 import com.skillifyme.course.Skillify_Me_Course.model.entity.UserCourse;
 import com.skillifyme.course.Skillify_Me_Course.repository.CourseRepository;
+import com.skillifyme.course.Skillify_Me_Course.repository.ModuleRepository;
 import com.skillifyme.course.Skillify_Me_Course.repository.UserCourseRepository;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -30,6 +34,9 @@ public class CourseService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private ModuleRepository moduleRepository;
+
+    @Autowired
     private CourseMapper courseMapper;
 
     @Autowired
@@ -38,10 +45,28 @@ public class CourseService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private ModuleService moduleService;
+
+    @Autowired
+    private ModuleMapper moduleMapper;
+
     public List<CourseDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
-        return courses.stream().map(courseMapper::toDto).collect(Collectors.toList());
+
+        for (Course course : courses) {
+            List<Module> modules = course.getModuleIds().stream()
+                    .map(moduleService::getModuleById)
+                    .map(moduleMapper::toEntity)
+                    .collect(Collectors.toList());
+            course.setModules(modules);
+        }
+
+        return courses.stream()
+                .map(courseMapper::toDto)
+                .collect(Collectors.toList());
     }
+
 
     public List<CourseDTO> getCoursesByInstructor(String token) throws UnauthorizedException {
         ValidateTokenResponse response = validateInstructor(token);
@@ -49,6 +74,16 @@ public class CourseService {
         if (response.getValid()) {
             String instructorEmail = response.getEmail();
             List<Course> courses = courseRepository.findByInstructorEmail(instructorEmail);
+            for (Course course : courses) {
+                List<ModuleDTO> moduleDTOs = course.getModuleIds().stream()
+                        .map(moduleService::getModuleById)
+                        .toList();
+
+                List<Module> modules = moduleDTOs.stream()
+                        .map(moduleMapper::toEntity)
+                        .collect(Collectors.toList());
+                course.setModules(modules);
+            }
             return courses.stream().
                     map(courseMapper::toDto)
                     .collect(Collectors.toList());
@@ -120,7 +155,7 @@ public class CourseService {
 
             existingCourse.setTitle(courseDTO.getTitle());
             existingCourse.setDescription(courseDTO.getDescription());
-            existingCourse.setModules(courseMapper.toEntity(courseDTO).getModules());
+            existingCourse.setModuleIds(courseMapper.toEntity(courseDTO).getModuleIds());
             existingCourse.setLastModifiedDate(LocalDateTime.now());
             Course savedCourse = courseRepository.save(existingCourse);
             return courseMapper.toDto(savedCourse);
@@ -155,6 +190,17 @@ public class CourseService {
         Optional<Course> courseOptional = courseRepository.findById(courseId);
         if (courseOptional.isPresent()) {
             Course course = courseOptional.get();
+
+            List<ModuleDTO> moduleDTOs = course.getModuleIds().stream()
+                    .map(moduleService::getModuleById)
+                    .toList();
+
+            List<Module> modules = moduleDTOs.stream()
+                    .map(moduleMapper::toEntity)
+                    .collect(Collectors.toList());
+
+            course.setModules(modules);
+
             return courseMapper.toDto(course);
         } else {
             throw new ResourceNotFoundException("Course not found with id " + courseId);
@@ -166,8 +212,17 @@ public class CourseService {
                 .orElseThrow(() -> new UnauthorizedException("User has not purchased any course"));
         List<ObjectId> courseIds = userCourse.getCourseId();
         List<Course> courses = courseRepository.findAllById(courseIds);
+
+        for (Course course : courses) {
+            List<Module> modules = course.getModuleIds().stream()
+                    .map(moduleService::getModuleById)
+                    .map(moduleMapper::toEntity)
+                    .collect(Collectors.toList());
+            course.setModules(modules);
+        }
+
         return courses.stream()
-                .map(course -> modelMapper.map(course, CourseDTO.class)) // Assuming you have a ModelMapper bean
-                .toList();
+                .map(courseMapper::toDto)
+                .collect(Collectors.toList());
     }
 }
